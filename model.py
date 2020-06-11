@@ -25,7 +25,7 @@ class FlightPredictor:
         """Turns a time column of format hmm or hhmm to minutes from midnight"""
         return ((x // 100) * 60) + (x % 100)
 
-    def _pre_processing(self, x):
+    def pre_processing(self, x):
         """
         Preproccess X from sample space turns it into x_hat edible by our hypothesis
         :param x:
@@ -48,9 +48,8 @@ class FlightPredictor:
         # Flight_Number_Reporting_Airline: Flight Number
         # DestState: Destination Airport, State Code
         # x = pd.get_dummies(x, columns=["Tail_Number"], drop_first=True)
-        x = x.drop(columns=['Tail_Number', 'Flight_Number',
-                                'FlightDate', 'OriginState', 'DestState'])  # 8000 unique?!
-
+        x = x.drop(columns=['Tail_Number', 'Flight_Number_Reporting_Airline',
+                            'FlightDate', 'OriginState', 'DestState'])  # 8000 unique?!
 
         # Origin:	Origin Airport
         x = pd.get_dummies(x, columns=['Origin'], drop_first=True)
@@ -79,6 +78,7 @@ class FlightPredictor:
 
         # x = x.dropna()TODO are they going to bring none?
 
+        return x
 
 
 

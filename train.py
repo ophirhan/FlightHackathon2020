@@ -1,4 +1,6 @@
 import datetime
+import math
+import time
 
 import numpy as np
 import pandas as pd
@@ -6,8 +8,14 @@ import sklearn as skl
 import matplotlib as plt
 from sys import argv
 from model import FlightPredictor
-
-
+import re
+import xgboost as xgb
+from xgboost import XGBRegressor
+from xgboost import XGBClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.preprocessing import MultiLabelBinarizer
 
 if __name__ == '__main__':
     x = pd.read_csv(argv[1], dtype={"DelayFactor": str})
@@ -18,16 +26,48 @@ if __name__ == '__main__':
     # y_factor = pd.get_dummies(x["DelayFactor"], columns=['DelayFactor']).values todo
     y_factor = x["DelayFactor"]
     x = x.drop(columns=['ArrDelay', 'DelayFactor'])
-    y_delay = pd.factorize(y_delay)
-    # pred.p
+    y_factor = pd.factorize(y_factor)[0]
 
-    dropped = ['Tail_Number', 'Flight_Number_Reporting_Airline',
-                            'FlightDate', 'OriginState', 'DestState']
-    x = x.drop(columns=dropped)  # 8000 unique?! yes! of course
-    for i in x:
-        if i not in dropped:
-            delay_corr = np.cov(x[i], y_delay)[0][1] / (np.std(x[i]) * np.std(y_delay))
-            factor_corr = np.cov(x[i], y_factor)[0][1] / (np.std(x[i]) * np.std(y_factor))
-            print("delay Correlation according to " + i + ": " + str(round(delay_corr, 3)))
-            print("factor Correlation according to " + i + ": " + str(round(delay_corr, 3)))
+    x = pred.pre_processing(x)
+    # categorized = ['DayOfWeek', 'Reporting_Airline', 'Origin', 'OriginCityName', 'Dest', 'DestCityName']
+    # for i in x:
+    #     if i not in categorized:
+    #         delay_corr = np.cov(x[i], y_delay)[0][1] / (np.std(x[i]) * np.std(y_delay))
+    #         factor_corr = np.cov(x[i], y_factor)[0][1] / (np.std(x[i]) * np.std(y_factor))
+    #         print("delay Correlation according to " + i + ": " + str(round(delay_corr, 5)))
+    #         print("factor Correlation according to " + i + ": " + str(round(delay_corr, 5)))
 
+    # split data into train and test sets
+    seed = 7
+    test_size = 0.33
+    X_train, X_test, y_train, y_test = train_test_split(x, y_delay, test_size=test_size, random_state=seed)
+
+    # fit model no training data
+    model = XGBRegressor(objective='reg:linear', colsample_bytree=0.3, learning_rate=0.1,
+                max_depth=5, alpha=10, n_estimators=10)
+    model.fit(X_train, y_train)
+
+    model.save_model(str(time.localtime()))
+
+    y_pred = model.predict(X_test)
+    print(y_pred)
+
+    # predictions = [round(value) for value in y_pred]
+
+    mse = math.sqrt(np.mean(y_pred - y_test) ** 2)
+    print(mse)
+
+
+    X_train, X_test, y_train, y_test = train_test_split(x, y_factor, test_size=test_size, random_state=seed)
+    model = XGBClassifier(num)
+
+    # You may need to use MultiLabelBinarizer to encode your variables from arrays [[x, y, z]] to a multilabel
+    # format before training.
+    mlb = MultiLabelBinarizer()
+    y = mlb.fit_transform(y_train)
+
+    clf.fit(X_train, y_train)
+
+    y_pred = clf.predict(X_test)
+    error = np.where(y_pred != y_test, 1, 0)
+    print(np.sum(error) / len(y_test))
