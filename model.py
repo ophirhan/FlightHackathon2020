@@ -21,30 +21,64 @@ class FlightPredictor:
         """
         raise NotImplementedError
 
+    def __hhmm_to_minutes_from_midnight(self, x):
+        """Turns a time column of format hmm or hhmm to minutes from midnight"""
+        return ((x // 100) * 60) + (x % 100)
+
     def _pre_processing(self, x):
-        # x = x.drop("bli bli blah", 0) #TODO what should we write here
+        """
+        Preproccess X from sample space turns it into x_hat edible by our hypothesis
+        :param x:
+        :return:
+        """
+
+        # DayOfWeek:	Day of Week
+        x = pd.get_dummies(x, columns=['DayOfWeek'], drop_first=True)
+
+        # FlightDate:	Flight Date (yyyymmdd)
         date = pd.to_datetime(x['FlightDate'], errors="coerce")
         x['year'] = date.dt.year
         x['month'] = date.dt.month
         x['day'] = date.dt.day
 
-        x = pd.get_dummies(x, columns=['DayOfWeek'], drop_first=True)
+        # Reporting_Airline: Unique Carrier Code.
         x = pd.get_dummies(x, columns=['Reporting_Airline'], drop_first=True)
-        x = pd.get_dummies(x, columns=['Origin'], drop_first=True)
-        x = pd.get_dummies(x, columns=['OriginCityName'], drop_first=True)
-        x = pd.get_dummies(x, columns=['Dest'], drop_first=True)
-        x = pd.get_dummies(x, columns=['DestCityName'], drop_first=True)
+
+        # Tail_Number: Tail Number
+        # Flight_Number_Reporting_Airline: Flight Number
+        # DestState: Destination Airport, State Code
         # x = pd.get_dummies(x, columns=["Tail_Number"], drop_first=True)
         x = pd.drop(x, columns=['Tail_Number', 'Flight_Number',
                                 'FlightDate', 'OriginState', 'DestState'])  # 8000 unique?!
+
+
+        # Origin:	Origin Airport
+        x = pd.get_dummies(x, columns=['Origin'], drop_first=True)
+
+        # OriginCityName:	Origin City, State
+        x = pd.get_dummies(x, columns=['OriginCityName'], drop_first=True)
+
+        # OriginState: Origin Airport, State Code
+
+        # Dest: Destination Airport
+        x = pd.get_dummies(x, columns=['Dest'], drop_first=True)
+
+        # DestCityName: Destination City, Dest state
+        x = pd.get_dummies(x, columns=['DestCityName'], drop_first=True)
+
+
+        # CRSDepTime: CRS Departure Time (local time: hhmm)
+        x['CRSDepTime'] = self.__hhmm_to_minutes_from_midnight(x['CRSDepTime'])
+
+        # CRSElapsedTime: CRS Elapsed Time of Flight, in Minutes
+
+        # Distance: Distance between airports (miles)
+
+        # CRSArrTime: Planned Arrival Time (local time: hhmm)
+        x['CRSArrTime'] = self.__hhmm_to_minutes_from_midnight(x['CRSArrTime'])
+
         # x = x.dropna()TODO are they going to bring none?
 
-
-    def __split_y(self, x):
-        y_delay = x["ArrDelay"].values
-        x = x.drop("ArrDelay", 1)
-        y_factor = x["DelayFactor"].values
-        x = x.drop("DelayFactor", 1)
 
     def predict(self, x):
         """
