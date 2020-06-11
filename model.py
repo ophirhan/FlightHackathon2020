@@ -19,7 +19,7 @@ class FlightPredictor:
         Initialize an object from this class.
         @param path_to_weather: The path to a csv file containing weather data.
         """
-        raise NotImplementedError
+
 
     def __hhmm_to_minutes_from_midnight(self, x):
         """Turns a time column of format hmm or hhmm to minutes from midnight"""
@@ -48,7 +48,7 @@ class FlightPredictor:
         # Flight_Number_Reporting_Airline: Flight Number
         # DestState: Destination Airport, State Code
         # x = pd.get_dummies(x, columns=["Tail_Number"], drop_first=True)
-        x = pd.drop(x, columns=['Tail_Number', 'Flight_Number',
+        x = x.drop(columns=['Tail_Number', 'Flight_Number',
                                 'FlightDate', 'OriginState', 'DestState'])  # 8000 unique?!
 
 
@@ -78,6 +78,8 @@ class FlightPredictor:
         x['CRSArrTime'] = self.__hhmm_to_minutes_from_midnight(x['CRSArrTime'])
 
         # x = x.dropna()TODO are they going to bring none?
+
+
 
 
     def predict(self, x):
