@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import sklearn as skl
 import matplotlib as plt
+import xgboost as xgb
 
 
 class FlightPredictor:
@@ -19,7 +20,10 @@ class FlightPredictor:
         Initialize an object from this class.
         @param path_to_weather: The path to a csv file containing weather data.
         """
-
+        self.reg = xgb.Booster({'nthread': 8})
+        self.cls = xgb.Booster({'nthread': 8})
+        self.reg.load_model("reg_model.bin")
+        self.reg.load_model("cls_model.bin")
 
     def __hhmm_to_minutes_from_midnight(self, x):
         """Turns a time column of format hmm or hhmm to minutes from midnight"""
@@ -49,13 +53,13 @@ class FlightPredictor:
         # DestState: Destination Airport, State Code
         # x = pd.get_dummies(x, columns=["Tail_Number"], drop_first=True)
         x = x.drop(columns=['Tail_Number', 'Flight_Number_Reporting_Airline',
-                            'FlightDate', 'OriginState', 'DestState'])  # 8000 unique?!
+                            'FlightDate', 'OriginState', 'DestState', 'OriginCityName', 'DestCityName'])  # 8000 unique?!
 
         # Origin:	Origin Airport
         x = pd.get_dummies(x, columns=['Origin'], drop_first=True)
 
         # OriginCityName:	Origin City, State
-        x = pd.get_dummies(x, columns=['OriginCityName'], drop_first=True)
+        # x = pd.get_dummies(x, columns=['OriginCityName'], drop_first=True)
 
         # OriginState: Origin Airport, State Code
 
@@ -63,7 +67,7 @@ class FlightPredictor:
         x = pd.get_dummies(x, columns=['Dest'], drop_first=True)
 
         # DestCityName: Destination City, Dest state
-        x = pd.get_dummies(x, columns=['DestCityName'], drop_first=True)
+        # x = pd.get_dummies(x, columns=['DestCityName'], drop_first=True)
 
 
         # CRSDepTime: CRS Departure Time (local time: hhmm)
